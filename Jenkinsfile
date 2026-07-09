@@ -1,6 +1,14 @@
 pipeline {
     agent any
 
+    parameters {
+        booleanParam(
+            name: 'DESTROY',
+            defaultValue: false,
+            description: 'Check this to destroy resources instead of applying'
+        )
+    }
+
     environment {
         AWS_REGION       = 'ap-south-1'
         TF_IN_AUTOMATION = 'true'
@@ -36,7 +44,12 @@ pipeline {
         }
 
         stage('Dev: Validate') {
-            when { branch 'dev' }
+            when {
+                allOf {
+                    branch 'dev'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -50,7 +63,12 @@ pipeline {
         }
 
         stage('Dev: Plan') {
-            when { branch 'dev' }
+            when {
+                allOf {
+                    branch 'dev'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -64,7 +82,12 @@ pipeline {
         }
 
         stage('Dev: Apply') {
-            when { branch 'dev' }
+            when {
+                allOf {
+                    branch 'dev'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -72,6 +95,37 @@ pipeline {
                 ]]) {
                     dir('Environments/dev') {
                         sh 'terraform apply -auto-approve tfplan'
+                    }
+                }
+            }
+        }
+
+        stage('Dev: Destroy Approval') {
+            when {
+                allOf {
+                    branch 'dev'
+                    expression { params.DESTROY }
+                }
+            }
+            steps {
+                input(message: 'Are you sure you want to DESTROY all DEV resources?', ok: 'Yes, Destroy')
+            }
+        }
+
+        stage('Dev: Destroy') {
+            when {
+                allOf {
+                    branch 'dev'
+                    expression { params.DESTROY }
+                }
+            }
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'AWS Credentials'
+                ]]) {
+                    dir('Environments/dev') {
+                        sh 'terraform destroy -auto-approve'
                     }
                 }
             }
@@ -94,7 +148,12 @@ pipeline {
         }
 
         stage('Main: Validate') {
-            when { branch 'main' }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -108,7 +167,12 @@ pipeline {
         }
 
         stage('Main: Plan') {
-            when { branch 'main' }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -122,14 +186,24 @@ pipeline {
         }
 
         stage('Main: Approval') {
-            when { branch 'main' }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 input(message: 'Approve Terraform Apply to MAIN (Production)?', ok: 'Approve')
             }
         }
 
         stage('Main: Apply') {
-            when { branch 'main' }
+            when {
+                allOf {
+                    branch 'main'
+                    expression { !params.DESTROY }
+                }
+            }
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
@@ -137,6 +211,37 @@ pipeline {
                 ]]) {
                     dir('Environments/main') {
                         sh 'terraform apply -auto-approve tfplan'
+                    }
+                }
+            }
+        }
+
+        stage('Main: Destroy Approval') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DESTROY }
+                }
+            }
+            steps {
+                input(message: 'Are you sure you want to DESTROY all MAIN (Production) resources?', ok: 'Yes, Destroy')
+            }
+        }
+
+        stage('Main: Destroy') {
+            when {
+                allOf {
+                    branch 'main'
+                    expression { params.DESTROY }
+                }
+            }
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'AWS Credentials'
+                ]]) {
+                    dir('Environments/main') {
+                        sh 'terraform destroy -auto-approve'
                     }
                 }
             }

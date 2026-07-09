@@ -1,4 +1,4 @@
-resource "aws_security_group" "this" {
+resource "aws_security_group" "infra_SG" {
   name        = "${var.instance_name}-sg"
   description = "Security group for ${var.instance_name}"
   vpc_id      = var.vpc_id
@@ -24,11 +24,11 @@ resource "aws_security_group" "this" {
   tags = merge(var.tags, { Name = "${var.instance_name}-sg" })
 }
 
-resource "aws_instance" "this" {
+resource "aws_instance" "Sample_EC2" {
   ami                    = var.ami_id
   instance_type          = var.instance_type
   subnet_id              = var.subnet_id
-  vpc_security_group_ids = [aws_security_group.this.id]
+  vpc_security_group_ids = [aws_security_group.infra_SG.id]
   key_name               = var.key_name
 
   root_block_device {

@@ -10,9 +10,9 @@ terraform {
 
   backend "s3" {
     bucket         = "terraform-infra-resources"
-    key            = "dev/terraform.tfstate"
+    key            = "Environments/dev/terraform.tfstate"
     region         = "ap-south-1"
-    dynamodb_table = "terraform-resources"
+    dynamodb_table = "infra_table"
     encrypt        = true
   }
 }

@@ -33,7 +33,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/dev') {
                         sh 'terraform init -reconfigure'
@@ -52,7 +52,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/dev') {
                         sh 'terraform validate'
@@ -71,7 +71,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/dev') {
                         sh 'terraform plan -out=tfplan'
@@ -90,7 +90,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/dev') {
                         sh 'terraform apply -auto-approve tfplan'
@@ -121,7 +121,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/dev') {
                         sh 'terraform destroy -auto-approve'
@@ -137,7 +137,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/main') {
                         sh 'terraform init -reconfigure'
@@ -156,7 +156,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/main') {
                         sh 'terraform validate'
@@ -175,7 +175,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/main') {
                         sh 'terraform plan -out=tfplan'
@@ -206,7 +206,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/main') {
                         sh 'terraform apply -auto-approve tfplan'
@@ -237,7 +237,7 @@ pipeline {
             steps {
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'AWS Credentials'
+                    credentialsId: 'Aws_cred'
                 ]]) {
                     dir('Environments/main') {
                         sh 'terraform destroy -auto-approve'

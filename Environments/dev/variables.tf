@@ -8,7 +8,7 @@ variable "aws_region" {
 variable "vpc_name" {
   description = "Name of the VPC"
   type        = string
-  default     = "dev-vpc"
+  default     = "Sample-vpc"
 }
 
 variable "vpc_cidr" {
@@ -45,25 +45,25 @@ variable "enable_nat_gateway" {
 variable "instance_name" {
   description = "Name tag for the EC2 instance"
   type        = string
-  default     = "dev-vm"
+  default     = "sample-vm"
 }
 
 variable "ami_id" {
   description = "AMI ID (e.g. Amazon Linux 2023 in ap-south-1: ami-0f9235932f10668d4)"
   type        = string
-  default     = "ami-0f9235932f10668d4"
+  default     = "ami-01a00762f46d584a1"
 }
 
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro"
+  default     = "c7i-flex.large"
 }
 
 variable "key_name" {
   description = "Name of an existing EC2 key pair for SSH"
   type        = string
-  default     = ""
+  default     = "Mumbai"
 }
 
 variable "ingress_rules" {
@@ -90,11 +90,11 @@ variable "ingress_rules" {
 variable "environment" {
   description = "Environment label (dev / staging / prod)"
   type        = string
-  default     = "dev"
+  default     = ""
 }
 
 variable "project" {
   description = "Project name used in common tags"
   type        = string
-  default     = "myproject"
+  default     = "Sampleproject"
 }

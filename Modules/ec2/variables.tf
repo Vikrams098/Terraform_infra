@@ -53,13 +53,26 @@ variable "ingress_rules" {
   }))
   default = [
     {
-      description = "SSH"
-      from_port   = 22
-      to_port     = 22
+      description = "App"
+      from_port   = 3000
+      to_port     = 3000
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
     }
   ]
+}
+
+variable "user_data" {
+  description = "Cloud-init script run on first boot (defaults to installing and starting Docker on AL2023)"
+  type        = string
+  default     = <<-EOF
+    #!/bin/bash
+    set -eux
+    dnf update -y
+    dnf install -y docker
+    systemctl enable --now docker
+    usermod -aG docker ec2-user
+  EOF
 }
 
 variable "tags" {

@@ -77,13 +77,62 @@ variable "ingress_rules" {
   }))
   default = [
     {
-      description = "SSH"
-      from_port   = 22
-      to_port     = 22
+      description = "App"
+      from_port   = 3000
+      to_port     = 3000
       protocol    = "tcp"
       cidr_blocks = ["0.0.0.0/0"]
     }
   ]
+}
+
+# ─── RDS ──────────────────────────────────────────────────────────────────────
+variable "db_name" {
+  description = "Name of the initial Postgres database"
+  type        = string
+  default     = "kvscafe"
+}
+
+variable "db_username" {
+  description = "RDS master username (must not be a reserved word like 'admin')"
+  type        = string
+  default     = "kvscafe_admin"
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "db_allocated_storage" {
+  description = "RDS allocated storage in GiB"
+  type        = number
+  default     = 20
+}
+
+variable "db_engine_version" {
+  description = "Postgres major version"
+  type        = string
+  default     = "16"
+}
+
+variable "db_multi_az" {
+  description = "Whether to deploy a standby RDS replica in a second AZ"
+  type        = bool
+  default     = false
+}
+
+variable "db_deletion_protection" {
+  description = "Prevent accidental terraform destroy of the RDS instance"
+  type        = bool
+  default     = true
+}
+
+variable "db_skip_final_snapshot" {
+  description = "Skip taking a final RDS snapshot on deletion"
+  type        = bool
+  default     = false
 }
 
 # ─── Tags ─────────────────────────────────────────────────────────────────────

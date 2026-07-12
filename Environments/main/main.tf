@@ -89,14 +89,15 @@ module "rds" {
   private_subnet_ids        = module.vpc.private_subnet_ids
   allowed_security_group_id = module.asg.security_group_id
 
-  db_name             = var.db_name
-  db_username         = var.db_username
-  instance_class      = var.db_instance_class
-  allocated_storage   = var.db_allocated_storage
-  engine_version      = var.db_engine_version
-  multi_az            = var.db_multi_az
-  deletion_protection = var.db_deletion_protection
-  skip_final_snapshot = var.db_skip_final_snapshot
+  db_name                 = var.db_name
+  db_username             = var.db_username
+  instance_class          = var.db_instance_class
+  allocated_storage       = var.db_allocated_storage
+  engine_version          = var.db_engine_version
+  multi_az                = var.db_multi_az
+  backup_retention_period = var.db_backup_retention_period
+  deletion_protection     = var.db_deletion_protection
+  skip_final_snapshot     = var.db_skip_final_snapshot
 
   tags = local.common_tags
 }

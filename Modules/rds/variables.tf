@@ -59,9 +59,9 @@ variable "multi_az" {
 }
 
 variable "backup_retention_period" {
-  description = "Automated backup retention, in days"
+  description = "Automated backup retention, in days (new AWS accounts are capped at 1 by the free-tier restriction until the account ages out of it)"
   type        = number
-  default     = 7
+  default     = 1
 }
 
 variable "deletion_protection" {

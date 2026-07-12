@@ -8,7 +8,7 @@ variable "aws_region" {
 variable "vpc_name" {
   description = "Name of the VPC"
   type        = string
-  default     = "Sample-vpc"
+  default     = "Kv's-vpc"
 }
 
 variable "vpc_cidr" {
@@ -45,7 +45,7 @@ variable "enable_nat_gateway" {
 variable "instance_name" {
   description = "Name tag for the EC2 instance"
   type        = string
-  default     = "sample-vm"
+  default     = "Kv's-vm"
 }
 
 variable "ami_id" {
@@ -135,6 +135,12 @@ variable "db_skip_final_snapshot" {
   default     = false
 }
 
+variable "db_backup_retention_period" {
+  description = "Automated backup retention, in days (new AWS accounts are capped at 1 by the free-tier restriction)"
+  type        = number
+  default     = 1
+}
+
 # ─── Tags ─────────────────────────────────────────────────────────────────────
 variable "environment" {
   description = "Environment label (dev / staging / prod)"
@@ -145,5 +151,5 @@ variable "environment" {
 variable "project" {
   description = "Project name used in common tags"
   type        = string
-  default     = "Sampleproject"
+  default     = "Kv'sproject"
 }

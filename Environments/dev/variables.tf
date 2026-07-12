@@ -8,7 +8,7 @@ variable "aws_region" {
 variable "vpc_name" {
   description = "Name of the VPC"
   type        = string
-  default     = "Kv's-vpc"
+  default     = "kvs-vpc"
 }
 
 variable "vpc_cidr" {
@@ -45,7 +45,7 @@ variable "enable_nat_gateway" {
 variable "instance_name" {
   description = "Name tag for the EC2 instance"
   type        = string
-  default     = "Kv's-vm"
+  default     = "kvs-vm"
 }
 
 variable "ami_id" {
@@ -151,5 +151,5 @@ variable "environment" {
 variable "project" {
   description = "Project name used in common tags"
   type        = string
-  default     = "Kv'sproject"
+  default     = "kvs-project"
 }

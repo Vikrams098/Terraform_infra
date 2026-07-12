@@ -1,5 +1,7 @@
 resource "aws_db_subnet_group" "kvs_db" {
-  name       = "${var.identifier}-subnet-group"
+  # AWS requires this name to be lowercase — lower() protects against a
+  # future instance_name/identifier with uppercase characters breaking apply.
+  name       = lower("${var.identifier}-subnet-group")
   subnet_ids = var.private_subnet_ids
 
   tags = merge(var.tags, { Name = "${var.identifier}-subnet-group" })

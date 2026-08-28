@@ -112,6 +112,7 @@ resource "aws_security_group" "pub_sg" {
   description = "Allow HTTP and HTTPS traffic"
   vpc_id      = aws_vpc.myvpc.id
 
+
   ingress {
     description     = "SSH from public SG"
     from_port       = 22
@@ -144,7 +145,7 @@ resource "aws_security_group" "pub_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+}
   tags = {
     Name = "public-sg"
   }

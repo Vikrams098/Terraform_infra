@@ -1,103 +1,226 @@
-terraform {
-  required_version = ">= 1.5.0"
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
-  }
+resource "aws_vpc" "myvpc" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
-  backend "s3" {
-    bucket         = "terraform-infra-resources"
-    key            = "Environments/main/terraform.tfstate"
-    region         = "ap-south-1"
-    dynamodb_table = "infra_table"
-    encrypt        = true
+  tags = {
+    Name = "interview-vpc"
   }
 }
 
-provider "aws" {
-  region = var.aws_region
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.myvpc.id
+
+  tags = {
+    Name = "interview-igw"
+  }
 }
 
-module "vpc" {
-  source = "../../Modules/vpc"
 
-  vpc_name             = var.vpc_name
-  vpc_cidr             = var.vpc_cidr
-  availability_zones   = var.availability_zones
-  public_subnet_cidrs  = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs
-  enable_nat_gateway   = var.enable_nat_gateway
-  tags                 = local.common_tags
+
+resource "aws_subnet" "pub_subnet" {
+  vpc_id                  = aws_vpc.myvpc.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "ap-south-1a"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "public-subnet"
+  }
 }
 
-module "dns" {
-  source = "../../Modules/dns"
 
-  zone_name = var.domain_name
-  tags      = local.common_tags
+resource "aws_subnet" "pri_subnet" {
+  vpc_id            = aws_vpc.myvpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "ap-south-1a"
+
+  tags = {
+    Name = "private-subnet"
+  }
 }
 
-module "acm" {
-  source = "../../Modules/acm"
 
-  domain_name     = var.domain_name
-  route53_zone_id = module.dns.zone_id
-  tags            = local.common_tags
+resource "aws_eip" "my_eip" {
+  domain = "vpc"
+
+  tags = {
+    Name = "nat-eip"
+  }
 }
 
-module "alb" {
-  source = "../../Modules/alb"
 
-  name              = var.instance_name
-  vpc_id            = module.vpc.vpc_id
-  public_subnet_ids = module.vpc.public_subnet_ids
-  certificate_arn   = module.acm.certificate_arn
-  route53_zone_id   = module.dns.zone_id
-  domain_name       = var.domain_name
-  tags              = local.common_tags
+resource "aws_nat_gateway" "my_nat" {
+  allocation_id = aws_eip.my_eip.id
+  subnet_id     = aws_subnet.pub_subnet.id
+
+  tags = {
+    Name = "interview-nat"
+  }
+
+  depends_on = [
+    aws_internet_gateway.my_igw
+  ]
 }
 
-module "asg" {
-  source = "../../Modules/asg"
+resource "aws_route_table" "pub_rt" {
+  vpc_id = aws_vpc.myvpc.id
 
-  name                  = var.instance_name
-  vpc_id                = module.vpc.vpc_id
-  private_subnet_ids    = module.vpc.private_subnet_ids
-  ami_id                = var.ami_id
-  instance_type         = var.instance_type
-  key_name              = var.key_name
-  alb_security_group_id = module.alb.security_group_id
-  target_group_arn      = module.alb.target_group_arn
-  min_size              = var.asg_min_size
-  max_size              = var.asg_max_size
-  desired_capacity      = var.asg_desired_capacity
-  tags                  = local.common_tags
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+
+  tags = {
+    Name = "public-route-table"
+  }
 }
 
-module "rds" {
-  source = "../../Modules/rds"
 
-  identifier                = "${var.instance_name}-postgres"
-  vpc_id                    = module.vpc.vpc_id
-  private_subnet_ids        = module.vpc.private_subnet_ids
-  allowed_security_group_id = module.asg.security_group_id
 
-  db_name                 = var.db_name
-  db_username             = var.db_username
-  instance_class          = var.db_instance_class
-  allocated_storage       = var.db_allocated_storage
-  engine_version          = var.db_engine_version
-  multi_az                = var.db_multi_az
-  backup_retention_period = var.db_backup_retention_period
-  deletion_protection     = var.db_deletion_protection
-  skip_final_snapshot     = var.db_skip_final_snapshot
+resource "aws_route_table_association" "pub_rt_assoc" {
+  subnet_id      = aws_subnet.pub_subnet.id
+  route_table_id = aws_route_table.pub_rt.id
+}
 
-  tags = local.common_tags
+
+
+resource "aws_route_table" "pri_rt" {
+  vpc_id = aws_vpc.myvpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.my_nat.id
+  }
+
+  tags = {
+    Name = "private-route-table"
+  }
+}
+
+
+
+resource "aws_route_table_association" "pri_rt_assoc" {
+  subnet_id      = aws_subnet.pri_subnet.id
+  route_table_id = aws_route_table.pri_rt.id
+}
+
+
+resource "aws_security_group" "pub_sg" {
+  name        = "public-sg"
+  description = "Allow HTTP and HTTPS traffic"
+  vpc_id      = aws_vpc.myvpc.id
+
+  ingress {
+    description     = "SSH from public SG"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.pub_sg.id]
+
+  # HTTP
+  ingress {
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # HTTPS
+  ingress {
+    description = "Allow HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Outbound
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "public-sg"
+  }
+}
+
+
+
+resource "aws_security_group" "pri_sg" {
+  name        = "private-sg"
+  description = "Private resources security group"
+  vpc_id      = aws_vpc.myvpc.id
+
+  ingress {
+    description     = "SSH from public SG"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.pub_sg.id]
+  }
+  ingress {
+    description = "Allow HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "private-sg"
+  }
+}
+
+
+
+
+resource "aws_instance" "Infra_ec2" {
+
+  ami           = "ami-0ac7b260cf76d8865"
+  instance_type = "t2.micro"
+
+  subnet_id = aws_subnet.pub_subnet.id
+
+  vpc_security_group_ids = [
+    aws_security_group.pub_sg.id
+  ]
+
+  key_name = var.key_name
+
+  associate_public_ip_address = true
+
+
+
+
+  user_data = <<-EOF
+    #!/bin/bash
+    useradd -m nodeuser
+    echo "nodeuser:Password123" | chpasswd
+    usermod -aG wheel nodeuser
+  EOF
+
+  tags = {
+    Name = "machine-test-server"
+  }
 }
